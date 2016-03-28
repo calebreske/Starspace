@@ -81,7 +81,7 @@ enum PLANETTYPE
 	cloud
 };
 
-CONCOL cloud[ysize][xsize];
+CONCOL clouds[ysize][xsize];
 
 const int starchance = 250;
 
@@ -90,6 +90,8 @@ bool planet[ysize][xsize];
 int planetNumber = 0;
 
 char ID[ysize][xsize];
+
+int seed[ysize][xsize];
 
 PLANETTYPE planetType[ysize][xsize];
 
@@ -122,10 +124,10 @@ void printG()
 	{
 		for (int j = 0; j < xsize; ++j)
 		{
-			curPos(j, i);
-
 			if (planet[i][j] == true)
 			{
+				curPos(j, i);
+
 				switch (planetType[i][j])
 				{
 				case earthlike:
@@ -153,11 +155,6 @@ void printG()
 
 				cout << "#";
 			}
-
-			if (planet[i][j] == false)
-			{
-				cout << " ";
-			}
 		}
 	}
 
@@ -165,15 +162,17 @@ void printG()
 	{
 		for (int j = 0; j < xsize; ++j)
 		{
-			curPos(j, i);
-
 			if (planet[i][j - 1] == true)
 			{
+				curPos(j, i);
+
 				color(white);
 				std::cout << ID[i][j - 1];
 			}
 		}
 	}
+
+	curPos(xsize - 1, ysize - 1);
 
 	color(white);
 
@@ -222,8 +221,12 @@ void printG()
 
 }
 
+/*
+- # of random #'s required to generate earthlike & island: 16
+	- # of random #'s required to generate cloud: 1
+*/
 
-void clump()
+void clump(int ii, int jj)
 {
 	using namespace std;
 
@@ -247,7 +250,7 @@ void clump()
 	}
 }
 
-void clear()
+void clear(int ii, int jj)
 {
 	using namespace std;
 
@@ -268,7 +271,7 @@ void clear()
 	}
 }
 
-void smooth()
+void smooth(int ii, int jj)
 {
 	using namespace std;
 
@@ -422,7 +425,7 @@ void smooth()
 	}
 }
 
-void add()
+void add(int ii, int jj)
 {
 	using namespace std;
 
@@ -455,7 +458,7 @@ void add()
 	}
 }
 
-void islandIt()
+void islandIt(int ii, int jj)
 {
 	for (int i = 0; i < ysize; ++i)
 	{
@@ -476,7 +479,7 @@ void islandIt()
 	}
 }
 
-void getTerrain()
+void getTerrain(int ii, int jj)
 {
 	//ok so this function generates the terrain into clumps. It also has sort-of seamless transfer between TEMPERATE and HOT climates
 	for (int i = 0; i < ysize; ++i)
@@ -632,13 +635,15 @@ void getTerrain()
 	}
 }
 
-void generateWorldE()
+void generateWorldE(int ii, int jj)
 {
 	HANDLE  hConsole;
 	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	srand(static_cast <unsigned int>(time(0)));
 	SetConsoleTextAttribute(hConsole, 15);//text color initially to white
 	using namespace std;
+
+	std::mt19937 mersenne(seed[ii][jj]);;
 
 	std::string type = "c";
 
@@ -696,7 +701,7 @@ void generateWorldE()
 
 	for (int i = 0; i < groups; ++i)//this is where the probabilities are done
 	{
-		clump();
+		clump(ii, jj);
 	}
 
 	for (int i = 0; i < ysize; ++i)//tells whether the land is t or f based on probs
@@ -719,15 +724,15 @@ void generateWorldE()
 	}
 
 	//clear gets rid of the tiny islands
-	clear();
-	clear();
+	clear(ii, jj);
+	clear(ii, jj);
 
 	//smooth gets rid of those annoying corner blocks
-	smooth();
-	smooth();
-	smooth();
+	smooth(ii, jj);
+	smooth(ii, jj);
+	smooth(ii, jj);
 
-	clear();
+	clear(ii, jj);
 
 	for (int i = 0; i < ysize; ++i)//gets rid of the land at the bottom that is always there due to a relationship error
 	{
@@ -744,27 +749,27 @@ void generateWorldE()
 	{
 		for (int a = 0; a < 25; ++a)
 		{
-			add();
+			add(ii, jj);
 		}
 
-		islandIt();
+		islandIt(ii, jj);
 	}
 
-	smooth();//just smoothing out the newly created continents. This is fine even with the islands type, so it's not in an if()
+	smooth(ii, jj);//just smoothing out the newly created continents. This is fine even with the islands type, so it's not in an if()
 
 
 
-	getTerrain();
+	getTerrain(ii, jj);
 
 	//actually prints the land
 	for (int i = 0; i < ysize; ++i)
 	{
 		for (int j = 0; j < xsize; ++j)
 		{
-			curPos(j, i);
-
 			if (land[i][j] == true)
 			{
+				curPos(j, i);
+
 				switch (terraType[i][j])
 				{
 				case ICE_PLAINS:
@@ -802,6 +807,8 @@ void generateWorldE()
 
 			if (land[i][j] == false)
 			{
+				curPos(j, i);
+
 				SetConsoleTextAttribute(hConsole, 1);
 				cout << static_cast<char>(247);
 
@@ -834,7 +841,7 @@ void generateWorldE()
 	}
 }
 
-void generateWorldI()
+void generateWorldI(int ii, int jj)
 {
 	HANDLE  hConsole;
 	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -898,7 +905,7 @@ void generateWorldI()
 
 	for (int i = 0; i < groups; ++i)//this is where the probabilities are done
 	{
-		clump();
+		clump(ii, jj);
 	}
 
 	for (int i = 0; i < ysize; ++i)//tells whether the land is t or f based on probs
@@ -921,15 +928,15 @@ void generateWorldI()
 	}
 
 	//clear gets rid of the tiny islands
-	clear();
-	clear();
+	clear(ii, jj);
+	clear(ii, jj);
 
 	//smooth gets rid of those annoying corner blocks
-	smooth();
-	smooth();
-	smooth();
+	smooth(ii, jj);
+	smooth(ii, jj);
+	smooth(ii, jj);
 
-	clear();
+	clear(ii, jj);
 
 	for (int i = 0; i < ysize; ++i)//gets rid of the land at the bottom that is always there due to a relationship error
 	{
@@ -946,17 +953,17 @@ void generateWorldI()
 	{
 		for (int a = 0; a < 25; ++a)
 		{
-			add();
+			add(ii, jj);
 		}
 
-		islandIt();
+		islandIt(ii, jj);
 	}
 
-	smooth();//just smoothing out the newly created continents. This is fine even with the islands type, so it's not in an if()
+	smooth(ii, jj);//just smoothing out the newly created continents. This is fine even with the islands type, so it's not in an if()
 
 
 
-	getTerrain();
+	getTerrain(ii, jj);
 
 	//actually prints the land
 	for (int i = 0; i < ysize; ++i)
@@ -1018,8 +1025,111 @@ void generateWorldI()
 	for (int i = 0; i < xsize; ++i)
 		cout << "-";
 
-	//The worlds aren't always perfect, so you can have unlimited insurance if you don't like it
+	
 	cout << "\t\t\t\t\t\tThis is the water world you have selected.";
+
+	cout << "\n\t\t\t\t\t\tType 'back' to go back to the Galaxy Map\n\t\t\t\t\t\t";
+	string direction = "string";
+redo7:
+	cin >> direction;
+
+	if (direction == "back")
+	{
+		system("CLS");
+		printG();
+	}
+	else
+	{
+		cout << "\t\t\t\t\t\tTry Again!\n\t\t\t\t\t\t";
+		goto redo7;
+	}
+}
+
+
+//end of earthlike and and ocean generations
+//----------------------------------------------
+//beginning of cloud generation
+
+
+void generateWorldC(int ii, int jj)
+{
+	HANDLE  hConsole;
+	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	srand(static_cast <unsigned int>(time(0)));
+	SetConsoleTextAttribute(hConsole, 15);//text color initially to white
+	using namespace std;
+
+	system("CLS");
+
+	std::mt19937 mersenne(seed[ii][jj]);;
+
+	int randomSeed = mersenne() % 5;
+
+	for (int i = 0; i < ysize; ++i)
+	{
+		for (int j = 0; j < xsize; ++j)
+		{
+			switch (randomSeed)
+			{
+			case 0:
+				clouds[i][j] = dark_red;
+				break;
+			case 1:
+				clouds[i][j] = dark_green;
+				break;
+			case 2:
+				clouds[i][j] = dark_yellow;
+				break;
+			case 3:
+				clouds[i][j] = purple;
+				break;
+			case 4:
+				clouds[i][j] = gray;
+				break;
+			}
+		}
+
+	}
+
+	for (int i = 0; i < ysize; ++i)
+	{
+		for (int j = 0; j < xsize; ++j)
+		{
+			switch (clouds[i][j])
+			{
+			case dark_red:
+				color(dark_red);
+				cout << "#";
+				break;
+			case dark_green:
+				color(dark_green);
+				cout << "#";
+				break;
+			case dark_yellow:
+				color(dark_yellow);
+				cout << "#";
+				break;
+			case purple:
+				color(dark_purple);
+				cout << "#";
+				break;
+			case gray:
+				color(gray);
+				cout << "#";
+				break;
+			}
+
+		}
+	}
+
+	color(white);
+
+	//What appears below the world
+	for (int i = 0; i < xsize; ++i)
+		cout << "-";
+
+
+	cout << "\t\t\t\t\t\tThis is the gas world you have selected.";
 
 	cout << "\n\t\t\t\t\t\tType 'back' to go back to the Galaxy Map\n\t\t\t\t\t\t";
 	string direction = "string";
@@ -1036,69 +1146,6 @@ redo7:
 		cout << "Try Again!\n\t\t\t\t\t\t";
 		goto redo7;
 	}
-}
-
-
-//end of earthlike and and ocean generations
-//----------------------------------------------
-//beginning of cloud generation
-
-
-void generateWorldC()
-{
-	HANDLE  hConsole;
-	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	srand(static_cast <unsigned int>(time(0)));
-	SetConsoleTextAttribute(hConsole, 15);//text color initially to white
-	using namespace std;
-
-
-	int chance = mersenne() % 6;
-
-	for (int i = 0; i < ysize; ++i)
-	{
-		for (int j = 0; j < xsize; ++j)
-		{
-			curPos(j, i);
-			switch (chance)
-			{
-			case 0:
-				cloud[i][j] = dark_red;
-				color(dark_red);
-				cout << "#";
-				break;
-			case 1:
-				cloud[i][j] = dark_green;
-				color(dark_green);
-				cout << "#";
-				break;
-			case 2:
-				cloud[i][j] = blue;
-				color(dark_blue);
-				cout << "#";
-				break;
-			case 3:
-				cloud[i][j] = dark_yellow;
-				color(dark_yellow);
-				cout << "#";
-				break;
-			case 4:
-				cloud[i][j] = purple;
-				color(purple);
-				cout << "#";
-				break;
-			case 5:
-				cloud[i][j] = gray;
-				color(gray);
-				cout << "#";
-				break;
-			}
-		}
-
-		color(white);
-	}
-
-
 
 
 }
@@ -1160,7 +1207,7 @@ void generatePlanets()
 	}
 }
 
-void assignID() // My complete Planet Identification Software System v. 1.0.2
+void assignID() // My complete Planet Identification System v. 1.0.2
 {
 	for (int i = 0; i < ysize; ++i)
 	{
@@ -1221,6 +1268,15 @@ void assignID() // My complete Planet Identification Software System v. 1.0.2
 
 	}
 
+	// PRNG seed generation for planet concistency
+
+	for (int i = 0; i < ysize; ++i)
+	{
+		for (int j = 0; j < xsize; ++j)
+		{
+			seed[i][j] = mersenne();
+		}
+	}
 }
 
 void redirect()
@@ -1244,10 +1300,10 @@ void redirect()
 					switch (planetType[i][j])
 					{
 					case ocean:
-						generateWorldI();
+						generateWorldI(i, j);
 						break;
 					case earthlike:
-						generateWorldE();
+						generateWorldE(i, j);
 						break;
 					case lava:
 
@@ -1262,7 +1318,7 @@ void redirect()
 
 						break;
 					case cloud:
-
+						generateWorldC(i, j);
 						break;
 					}
 				}
